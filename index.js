@@ -2,43 +2,111 @@ const { prisma } = require('./generated/prisma-client')
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const secretword = 'pleaseDontHackMe3248';
+const expiresIn = '1 day';
+
+const userListFragment = `
+fragment userList on User {
+  id
+  email
+  profile {
+    id
+    name
+    country
+    timezone
+    role
+    status
+  }
+}
+`
+
+var validateToken = async (req, res) => {
+  try {
+    var header =  req.headers.authorization;
+      
+    if (header){
+      var token = header.replace('Token ', '');
+      var decodedToken = jwt.verify(token, secretword);
+      if(decodedToken.userId) {
+        var user = await prisma.user({ id: decodedToken.userId });
+        return user;  
+      }
+    }  
+  }
+  catch {
+    res.status(401).send({ message: 'Token expired. Login again to proceed' });
+  }
+}
 
 app.use(bodyParser.json())
 
-app.get(`/posts/published`, async (req, res) => {
-  const publishedPosts = await prisma.posts({ where: { published: true } })
-  res.json(publishedPosts)
+app.post('/user/create', async (req, res) => {
+  var data = req.body;
+  var hashedPassword = await bcrypt.hash(data.password, 10);
+  data.password = hashedPassword;
+  var user = await prisma.createUser(data);
+  var userToken = {
+    token: jwt.sign({ userId: user.id }, secretword, { expiresIn })
+  };
+  res.json(userToken)
 })
 
-app.get('/post/:postId', async (req, res) => {
-  const { postId } = req.params
-  const post = await prisma.post({ id: postId })
-  res.json(post)
+app.post('/login', async (req, res) => {
+    try {
+      var data = req.body;
+      var user = await prisma.user({ email: data.email });
+      var isValidUser = await bcrypt.compare(data.password, user.password);
+      if(isValidUser) {
+        var userToken = {
+          token: jwt.sign({ userId: user.id }, secretword, { expiresIn })
+        };
+        res.json(userToken)
+      } else {
+        res.status(401).send({ message: 'Invalid password.' });
+      }
+    }
+    catch {
+      res.status(401).send({ message: 'Could not find user with the email ' });
+    }
+});
+
+
+app.get(`/users`, async (req, res) => {
+  await validateToken(req, res);
+  var users = await prisma.users().$fragment(userListFragment)
+  res.json(users)
 })
 
-app.get('/posts/user/:userId', async (req, res) => {
-  const { userId } = req.params
-  const postsByUser = await prisma.user({ id: userId }).posts()
-  res.json(postsByUser)
+// TODO
+app.post(`/user/:userId/update-profile`, async (req, res) => {
+  var requestedUser = validateToken(req, res);
+  var userId = req.params.userId;
+  try {
+    var updateUserProfile = await prisma.updateProfile({
+      where: { id: userId },
+      data: req.body,
+    })
+    res.json(updateUserProfile)  
+  }
+  catch(err) {
+    res.status(401).send(err);
+  }
 })
 
-app.post('/user', async (req, res) => {
-  const newUser = await prisma.createUser(req.body)
-  res.json(newUser)
-})
 
-app.post('/post/draft', async (req, res) => {
-  const newPost = await prisma.createPost(req.body)
-  res.json(newPost)
-})
-
-app.put(`/post/publish/:postId`, async (req, res) => {
-  const { postId } = req.params
-  const updatedPost = await prisma.updatePost({
-    where: { id: postId },
-    data: { published: true },
+app.put('/user/:userId/make-admin', async (req, res) => {
+  var requestedUser = validateToken(req, res);
+  var userId = req.params.userId;
+  if(requestedUser.id == userId) {
+    res.status(400).send({ message: 'You cannot make youself an Admin' });
+  }
+  var markAsAdmin = await prisma.upsertProfile({
+    where: { id: userId },
+    data: { role: "Admin" },
   })
-  res.json(updatedPost)
+  res.json(markAsAdmin)
 })
 
 app.listen(3000, () =>

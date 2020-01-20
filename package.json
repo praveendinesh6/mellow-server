@@ -489,9 +489,12 @@
     "zen-observable-ts": "^0.8.20",
     "zip-stream": "^1.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "bcryptjs": "^2.4.3",
+    "nodemon": "^2.0.2"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js"
   },
   "repository": {
     "type": "git",

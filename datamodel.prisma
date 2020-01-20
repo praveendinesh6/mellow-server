@@ -1,13 +1,28 @@
-type User {
-  id: ID! @id
-  email: String @unique
-  name: String!
-  posts: [Post!]!
+enum Role {
+  Member
+  Admin
 }
 
-type Post {
+enum userStatus {
+  Available
+  Focus_mode
+  Unavailable
+}
+
+type User {
   id: ID! @id
-  title: String!
-  published: Boolean! @default(value: false)
-  author: User @relation(link: INLINE)
+  email: String! @unique
+  password: String!
+  profile: Profile @relation(link: INLINE)
+}
+
+type Profile {
+  id: ID! @id
+  name: String!
+  country: String
+  timezone: String!
+  role: Role! @default(value: Member)
+  status: userStatus! @default(value: Unavailable)
+  work_start_time: Int
+  work_end_time: Int
 }

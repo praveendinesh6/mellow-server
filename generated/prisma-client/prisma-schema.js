@@ -3,7 +3,7 @@ module.exports = {
   // Please don't change this file manually but run `prisma generate` to update it.
   // For more information, please read the docs: https://www.prisma.io/docs/prisma-client/
 
-/* GraphQL */ `type AggregatePost {
+/* GraphQL */ `type AggregateProfile {
   count: Int!
 }
 
@@ -18,12 +18,12 @@ type BatchPayload {
 scalar Long
 
 type Mutation {
-  createPost(data: PostCreateInput!): Post!
-  updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
-  updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
-  upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
-  deletePost(where: PostWhereUniqueInput!): Post
-  deleteManyPosts(where: PostWhereInput): BatchPayload!
+  createProfile(data: ProfileCreateInput!): Profile!
+  updateProfile(data: ProfileUpdateInput!, where: ProfileWhereUniqueInput!): Profile
+  updateManyProfiles(data: ProfileUpdateManyMutationInput!, where: ProfileWhereInput): BatchPayload!
+  upsertProfile(where: ProfileWhereUniqueInput!, create: ProfileCreateInput!, update: ProfileUpdateInput!): Profile!
+  deleteProfile(where: ProfileWhereUniqueInput!): Profile
+  deleteManyProfiles(where: ProfileWhereInput): BatchPayload!
   createUser(data: UserCreateInput!): User!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
@@ -49,161 +49,137 @@ type PageInfo {
   endCursor: String
 }
 
-type Post {
+type Profile {
   id: ID!
-  title: String!
-  published: Boolean!
-  author: User
+  name: String!
+  country: String
+  timezone: String!
+  role: Role!
+  status: userStatus!
+  work_start_time: Int
+  work_end_time: Int
 }
 
-type PostConnection {
+type ProfileConnection {
   pageInfo: PageInfo!
-  edges: [PostEdge]!
-  aggregate: AggregatePost!
+  edges: [ProfileEdge]!
+  aggregate: AggregateProfile!
 }
 
-input PostCreateInput {
+input ProfileCreateInput {
   id: ID
-  title: String!
-  published: Boolean
-  author: UserCreateOneWithoutPostsInput
+  name: String!
+  country: String
+  timezone: String!
+  role: Role
+  status: userStatus
+  work_start_time: Int
+  work_end_time: Int
 }
 
-input PostCreateManyWithoutAuthorInput {
-  create: [PostCreateWithoutAuthorInput!]
-  connect: [PostWhereUniqueInput!]
+input ProfileCreateOneInput {
+  create: ProfileCreateInput
+  connect: ProfileWhereUniqueInput
 }
 
-input PostCreateWithoutAuthorInput {
-  id: ID
-  title: String!
-  published: Boolean
-}
-
-type PostEdge {
-  node: Post!
+type ProfileEdge {
+  node: Profile!
   cursor: String!
 }
 
-enum PostOrderByInput {
+enum ProfileOrderByInput {
   id_ASC
   id_DESC
-  title_ASC
-  title_DESC
-  published_ASC
-  published_DESC
+  name_ASC
+  name_DESC
+  country_ASC
+  country_DESC
+  timezone_ASC
+  timezone_DESC
+  role_ASC
+  role_DESC
+  status_ASC
+  status_DESC
+  work_start_time_ASC
+  work_start_time_DESC
+  work_end_time_ASC
+  work_end_time_DESC
 }
 
-type PostPreviousValues {
+type ProfilePreviousValues {
   id: ID!
-  title: String!
-  published: Boolean!
+  name: String!
+  country: String
+  timezone: String!
+  role: Role!
+  status: userStatus!
+  work_start_time: Int
+  work_end_time: Int
 }
 
-input PostScalarWhereInput {
-  id: ID
-  id_not: ID
-  id_in: [ID!]
-  id_not_in: [ID!]
-  id_lt: ID
-  id_lte: ID
-  id_gt: ID
-  id_gte: ID
-  id_contains: ID
-  id_not_contains: ID
-  id_starts_with: ID
-  id_not_starts_with: ID
-  id_ends_with: ID
-  id_not_ends_with: ID
-  title: String
-  title_not: String
-  title_in: [String!]
-  title_not_in: [String!]
-  title_lt: String
-  title_lte: String
-  title_gt: String
-  title_gte: String
-  title_contains: String
-  title_not_contains: String
-  title_starts_with: String
-  title_not_starts_with: String
-  title_ends_with: String
-  title_not_ends_with: String
-  published: Boolean
-  published_not: Boolean
-  AND: [PostScalarWhereInput!]
-  OR: [PostScalarWhereInput!]
-  NOT: [PostScalarWhereInput!]
-}
-
-type PostSubscriptionPayload {
+type ProfileSubscriptionPayload {
   mutation: MutationType!
-  node: Post
+  node: Profile
   updatedFields: [String!]
-  previousValues: PostPreviousValues
+  previousValues: ProfilePreviousValues
 }
 
-input PostSubscriptionWhereInput {
+input ProfileSubscriptionWhereInput {
   mutation_in: [MutationType!]
   updatedFields_contains: String
   updatedFields_contains_every: [String!]
   updatedFields_contains_some: [String!]
-  node: PostWhereInput
-  AND: [PostSubscriptionWhereInput!]
-  OR: [PostSubscriptionWhereInput!]
-  NOT: [PostSubscriptionWhereInput!]
+  node: ProfileWhereInput
+  AND: [ProfileSubscriptionWhereInput!]
+  OR: [ProfileSubscriptionWhereInput!]
+  NOT: [ProfileSubscriptionWhereInput!]
 }
 
-input PostUpdateInput {
-  title: String
-  published: Boolean
-  author: UserUpdateOneWithoutPostsInput
+input ProfileUpdateDataInput {
+  name: String
+  country: String
+  timezone: String
+  role: Role
+  status: userStatus
+  work_start_time: Int
+  work_end_time: Int
 }
 
-input PostUpdateManyDataInput {
-  title: String
-  published: Boolean
+input ProfileUpdateInput {
+  name: String
+  country: String
+  timezone: String
+  role: Role
+  status: userStatus
+  work_start_time: Int
+  work_end_time: Int
 }
 
-input PostUpdateManyMutationInput {
-  title: String
-  published: Boolean
+input ProfileUpdateManyMutationInput {
+  name: String
+  country: String
+  timezone: String
+  role: Role
+  status: userStatus
+  work_start_time: Int
+  work_end_time: Int
 }
 
-input PostUpdateManyWithoutAuthorInput {
-  create: [PostCreateWithoutAuthorInput!]
-  delete: [PostWhereUniqueInput!]
-  connect: [PostWhereUniqueInput!]
-  set: [PostWhereUniqueInput!]
-  disconnect: [PostWhereUniqueInput!]
-  update: [PostUpdateWithWhereUniqueWithoutAuthorInput!]
-  upsert: [PostUpsertWithWhereUniqueWithoutAuthorInput!]
-  deleteMany: [PostScalarWhereInput!]
-  updateMany: [PostUpdateManyWithWhereNestedInput!]
+input ProfileUpdateOneInput {
+  create: ProfileCreateInput
+  update: ProfileUpdateDataInput
+  upsert: ProfileUpsertNestedInput
+  delete: Boolean
+  disconnect: Boolean
+  connect: ProfileWhereUniqueInput
 }
 
-input PostUpdateManyWithWhereNestedInput {
-  where: PostScalarWhereInput!
-  data: PostUpdateManyDataInput!
+input ProfileUpsertNestedInput {
+  update: ProfileUpdateDataInput!
+  create: ProfileCreateInput!
 }
 
-input PostUpdateWithoutAuthorDataInput {
-  title: String
-  published: Boolean
-}
-
-input PostUpdateWithWhereUniqueWithoutAuthorInput {
-  where: PostWhereUniqueInput!
-  data: PostUpdateWithoutAuthorDataInput!
-}
-
-input PostUpsertWithWhereUniqueWithoutAuthorInput {
-  where: PostWhereUniqueInput!
-  update: PostUpdateWithoutAuthorDataInput!
-  create: PostCreateWithoutAuthorInput!
-}
-
-input PostWhereInput {
+input ProfileWhereInput {
   id: ID
   id_not: ID
   id_in: [ID!]
@@ -218,52 +194,106 @@ input PostWhereInput {
   id_not_starts_with: ID
   id_ends_with: ID
   id_not_ends_with: ID
-  title: String
-  title_not: String
-  title_in: [String!]
-  title_not_in: [String!]
-  title_lt: String
-  title_lte: String
-  title_gt: String
-  title_gte: String
-  title_contains: String
-  title_not_contains: String
-  title_starts_with: String
-  title_not_starts_with: String
-  title_ends_with: String
-  title_not_ends_with: String
-  published: Boolean
-  published_not: Boolean
-  author: UserWhereInput
-  AND: [PostWhereInput!]
-  OR: [PostWhereInput!]
-  NOT: [PostWhereInput!]
+  name: String
+  name_not: String
+  name_in: [String!]
+  name_not_in: [String!]
+  name_lt: String
+  name_lte: String
+  name_gt: String
+  name_gte: String
+  name_contains: String
+  name_not_contains: String
+  name_starts_with: String
+  name_not_starts_with: String
+  name_ends_with: String
+  name_not_ends_with: String
+  country: String
+  country_not: String
+  country_in: [String!]
+  country_not_in: [String!]
+  country_lt: String
+  country_lte: String
+  country_gt: String
+  country_gte: String
+  country_contains: String
+  country_not_contains: String
+  country_starts_with: String
+  country_not_starts_with: String
+  country_ends_with: String
+  country_not_ends_with: String
+  timezone: String
+  timezone_not: String
+  timezone_in: [String!]
+  timezone_not_in: [String!]
+  timezone_lt: String
+  timezone_lte: String
+  timezone_gt: String
+  timezone_gte: String
+  timezone_contains: String
+  timezone_not_contains: String
+  timezone_starts_with: String
+  timezone_not_starts_with: String
+  timezone_ends_with: String
+  timezone_not_ends_with: String
+  role: Role
+  role_not: Role
+  role_in: [Role!]
+  role_not_in: [Role!]
+  status: userStatus
+  status_not: userStatus
+  status_in: [userStatus!]
+  status_not_in: [userStatus!]
+  work_start_time: Int
+  work_start_time_not: Int
+  work_start_time_in: [Int!]
+  work_start_time_not_in: [Int!]
+  work_start_time_lt: Int
+  work_start_time_lte: Int
+  work_start_time_gt: Int
+  work_start_time_gte: Int
+  work_end_time: Int
+  work_end_time_not: Int
+  work_end_time_in: [Int!]
+  work_end_time_not_in: [Int!]
+  work_end_time_lt: Int
+  work_end_time_lte: Int
+  work_end_time_gt: Int
+  work_end_time_gte: Int
+  AND: [ProfileWhereInput!]
+  OR: [ProfileWhereInput!]
+  NOT: [ProfileWhereInput!]
 }
 
-input PostWhereUniqueInput {
+input ProfileWhereUniqueInput {
   id: ID
 }
 
 type Query {
-  post(where: PostWhereUniqueInput!): Post
-  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
-  postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
+  profile(where: ProfileWhereUniqueInput!): Profile
+  profiles(where: ProfileWhereInput, orderBy: ProfileOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Profile]!
+  profilesConnection(where: ProfileWhereInput, orderBy: ProfileOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ProfileConnection!
   user(where: UserWhereUniqueInput!): User
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   node(id: ID!): Node
 }
 
+enum Role {
+  Member
+  Admin
+}
+
 type Subscription {
-  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
+  profile(where: ProfileSubscriptionWhereInput): ProfileSubscriptionPayload
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
 }
 
 type User {
   id: ID!
-  email: String
-  name: String!
-  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
+  email: String!
+  password: String!
+  profile: Profile
 }
 
 type UserConnection {
@@ -274,20 +304,9 @@ type UserConnection {
 
 input UserCreateInput {
   id: ID
-  email: String
-  name: String!
-  posts: PostCreateManyWithoutAuthorInput
-}
-
-input UserCreateOneWithoutPostsInput {
-  create: UserCreateWithoutPostsInput
-  connect: UserWhereUniqueInput
-}
-
-input UserCreateWithoutPostsInput {
-  id: ID
-  email: String
-  name: String!
+  email: String!
+  password: String!
+  profile: ProfileCreateOneInput
 }
 
 type UserEdge {
@@ -300,14 +319,20 @@ enum UserOrderByInput {
   id_DESC
   email_ASC
   email_DESC
-  name_ASC
-  name_DESC
+  password_ASC
+  password_DESC
 }
 
 type UserPreviousValues {
   id: ID!
-  email: String
-  name: String!
+  email: String!
+  password: String!
+}
+
+enum userStatus {
+  Available
+  Focus_mode
+  Unavailable
 }
 
 type UserSubscriptionPayload {
@@ -330,32 +355,13 @@ input UserSubscriptionWhereInput {
 
 input UserUpdateInput {
   email: String
-  name: String
-  posts: PostUpdateManyWithoutAuthorInput
+  password: String
+  profile: ProfileUpdateOneInput
 }
 
 input UserUpdateManyMutationInput {
   email: String
-  name: String
-}
-
-input UserUpdateOneWithoutPostsInput {
-  create: UserCreateWithoutPostsInput
-  update: UserUpdateWithoutPostsDataInput
-  upsert: UserUpsertWithoutPostsInput
-  delete: Boolean
-  disconnect: Boolean
-  connect: UserWhereUniqueInput
-}
-
-input UserUpdateWithoutPostsDataInput {
-  email: String
-  name: String
-}
-
-input UserUpsertWithoutPostsInput {
-  update: UserUpdateWithoutPostsDataInput!
-  create: UserCreateWithoutPostsInput!
+  password: String
 }
 
 input UserWhereInput {
@@ -387,23 +393,21 @@ input UserWhereInput {
   email_not_starts_with: String
   email_ends_with: String
   email_not_ends_with: String
-  name: String
-  name_not: String
-  name_in: [String!]
-  name_not_in: [String!]
-  name_lt: String
-  name_lte: String
-  name_gt: String
-  name_gte: String
-  name_contains: String
-  name_not_contains: String
-  name_starts_with: String
-  name_not_starts_with: String
-  name_ends_with: String
-  name_not_ends_with: String
-  posts_every: PostWhereInput
-  posts_some: PostWhereInput
-  posts_none: PostWhereInput
+  password: String
+  password_not: String
+  password_in: [String!]
+  password_not_in: [String!]
+  password_lt: String
+  password_lte: String
+  password_gt: String
+  password_gte: String
+  password_contains: String
+  password_not_contains: String
+  password_starts_with: String
+  password_not_starts_with: String
+  password_ends_with: String
+  password_not_ends_with: String
+  profile: ProfileWhereInput
   AND: [UserWhereInput!]
   OR: [UserWhereInput!]
   NOT: [UserWhereInput!]
