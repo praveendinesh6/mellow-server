@@ -93,7 +93,7 @@ app.put('/user/:userId/make-admin', async (req, res) => {
   let currentUser = req.userId
   let userId = req.params.userId
 
-  if (requestedUser.id == userId) {
+  if (currentUser == userId) {
     res.status(400).send({ message: 'You cannot make youself an Admin' })
   }
 

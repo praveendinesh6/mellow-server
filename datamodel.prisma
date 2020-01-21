@@ -14,15 +14,23 @@ type User {
   email: String! @unique
   password: String!
   profile: Profile @relation(link: INLINE)
+  teams: [Team!]!
 }
 
 type Profile {
   id: ID! @id
-  name: String!
+  name: String
   country: String
   timezone: String!
   role: Role! @default(value: Member)
-  status: userStatus! @default(value: Unavailable)
-  work_start_time: Int
-  work_end_time: Int
+  status: userStatus! @default(value: Available)
+  workStartTime: Int
+  workEndTime: Int
+}
+
+type Team {
+  id: ID! @id
+  name: String!
+  users: [User!]! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
 }
