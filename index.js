@@ -22,31 +22,31 @@ fragment userList on User {
 }
 `
 
-var validateToken = async (req, res) => {
-  try {
-    var header = req.headers.authorization
-
-    if (header) {
-      var token = header.replace('Token ', '')
-      var decodedToken = jwt.verify(token, secretword)
-      if (decodedToken.userId) {
-        var user = await prisma.user({ id: decodedToken.userId })
-        return user
-      }
-    }
-  } catch {
-    res.status(401).send({ message: 'Token expired. Login again to proceed' })
-  }
-}
-
 app.use(bodyParser.json())
 
+app.use((req, res, next) => {
+  const { authorization } = req.headers
+  if (authorization) {
+    let token = authorization.replace('Token ', '')
+    jwt.verify(token, secretword, (err, decodedToken) => {
+      if (err || !decodedToken) {
+        res
+          .status(401)
+          .send({ message: 'Token expired. Login again to proceed' })
+        return
+      }
+      req.userId = decodedToken.userId
+      next()
+    })
+  }
+})
+
 app.post('/user/create', async (req, res) => {
-  var data = req.body
-  var hashedPassword = await bcrypt.hash(data.password, 10)
+  let data = req.body
+  let hashedPassword = await bcrypt.hash(data.password, 10)
   data.password = hashedPassword
-  var user = await prisma.createUser(data)
-  var userToken = {
+  let user = await prisma.createUser(data)
+  let userToken = {
     token: jwt.sign({ userId: user.id }, secretword, { expiresIn }),
   }
   res.json(userToken)
@@ -54,16 +54,16 @@ app.post('/user/create', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   try {
-    var data = req.body
-    var user = await prisma.user({ email: data.email })
-    var isValidUser = await bcrypt.compare(data.password, user.password)
+    let data = req.body
+    let user = await prisma.user({ email: data.email })
+    let isValidUser = await bcrypt.compare(data.password, user.password)
     if (isValidUser) {
-      var userToken = {
+      let userToken = {
         token: jwt.sign({ userId: user.id }, secretword, { expiresIn }),
       }
       res.json(userToken)
     } else {
-      res.status(401).send({ message: 'Invalid password.' })
+      res.status(401).send({ message: 'Invalid password' })
     }
   } catch {
     res.status(401).send({ message: 'Could not find user with the email ' })
@@ -71,17 +71,15 @@ app.post('/login', async (req, res) => {
 })
 
 app.get(`/users`, async (req, res) => {
-  await validateToken(req, res)
-  var users = await prisma.users().$fragment(userListFragment)
+  let users = await prisma.users().$fragment(userListFragment)
   res.json(users)
 })
 
 // TODO
 app.post(`/user/:userId/update-profile`, async (req, res) => {
-  var requestedUser = validateToken(req, res)
-  var userId = req.params.userId
+  let userId = req.userId
   try {
-    var updateUserProfile = await prisma.updateProfile({
+    let updateUserProfile = await prisma.updateProfile({
       where: { id: userId },
       data: req.body,
     })
@@ -92,15 +90,18 @@ app.post(`/user/:userId/update-profile`, async (req, res) => {
 })
 
 app.put('/user/:userId/make-admin', async (req, res) => {
-  var requestedUser = validateToken(req, res)
-  var userId = req.params.userId
+  let currentUser = req.userId
+  let userId = req.params.userId
+
   if (requestedUser.id == userId) {
     res.status(400).send({ message: 'You cannot make youself an Admin' })
   }
-  var markAsAdmin = await prisma.upsertProfile({
+
+  let markAsAdmin = await prisma.upsertProfile({
     where: { id: userId },
     data: { role: 'Admin' },
   })
+
   res.json(markAsAdmin)
 })
 
