@@ -4,13 +4,32 @@ const app = express()
 const bodyParser = require('body-parser')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const dotenv = require('dotenv')
+
+dotenv.config()
+
 const secretword = 'pleaseDontHackMe3248'
-const expiresIn = '1 day'
+const expiresIn = '1d'
 
 app.use(bodyParser.json())
+app.use(
+  cors({
+    origin: [
+      `${process.env.CLIENT_URL || ''}`,
+      'http://localhost:8080',
+      'https://mellow.work',
+    ],
+    credentials: true,
+  })
+)
+app.use(cookieParser())
 
 app.use('/api', (req, res, next) => {
-  const { authorization } = req.headers
+  let authorization = req.cookies.mellowToken || ''
+  if (!authorization) authorization = req.headers.authorization
+
   if (authorization) {
     let token = authorization.replace('Token ', '')
     jwt.verify(token, secretword, (err, decodedToken) => {
@@ -23,6 +42,8 @@ app.use('/api', (req, res, next) => {
       req.userId = decodedToken.userId
       next()
     })
+  } else {
+    res.status(401).send({ message: 'Invalid credentials' })
   }
 })
 
@@ -35,6 +56,11 @@ app.post('/login', async (req, res) => {
       let userToken = {
         token: jwt.sign({ userId: user.id }, secretword, { expiresIn }),
       }
+      res.cookie('mellowToken', `Token ${token}`, {
+        expires: new Date(Date.now() + expiresIn),
+        secure: false, // set to true if your using https
+        httpOnly: true,
+      })
       res.json(userToken)
     } else {
       res.status(401).send({ message: 'Invalid password' })
@@ -106,7 +132,7 @@ app.get('/api/user/:userId', async (req, res) => {
   }
 })
 
-app.post(`/api/user/:userId/update`, async (req, res) => {
+app.put(`/api/user/:userId/update`, async (req, res) => {
   let userId = req.userId
   try {
     let profile = await prisma.user({ id: userId }).profile()
