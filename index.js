@@ -53,15 +53,14 @@ app.post('/login', async (req, res) => {
     let user = await prisma.user({ email: data.email })
     let isValidUser = await bcrypt.compare(data.password, user.password)
     if (isValidUser) {
-      let userToken = {
-        token: jwt.sign({ userId: user.id }, secretword, { expiresIn }),
-      }
+      let token = jwt.sign({ userId: user.id }, secretword, { expiresIn })
+
       res.cookie('mellowToken', `Token ${token}`, {
         expires: new Date(Date.now() + expiresIn),
         secure: false, // set to true if your using https
         httpOnly: true,
       })
-      res.json(userToken)
+      res.json({ token })
     } else {
       res.status(401).send({ message: 'Invalid password' })
     }
