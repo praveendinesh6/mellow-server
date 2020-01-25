@@ -7,24 +7,9 @@ const jwt = require('jsonwebtoken')
 const secretword = 'pleaseDontHackMe3248'
 const expiresIn = '1 day'
 
-const userListFragment = `
-fragment userList on User {
-  id
-  email
-  profile {
-    id
-    name
-    country
-    timezone
-    role
-    status
-  }
-}
-`
-
 app.use(bodyParser.json())
 
-app.use((req, res, next) => {
+app.use('/api', (req, res, next) => {
   const { authorization } = req.headers
   if (authorization) {
     let token = authorization.replace('Token ', '')
@@ -41,12 +26,7 @@ app.use((req, res, next) => {
   }
 })
 
-const skipAuth = (req, res, next) => {
-  req.skipAuth = true
-  next()
-}
-
-app.post('/login', skipAuth, async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
     let data = req.body
     let user = await prisma.user({ email: data.email })
@@ -64,12 +44,7 @@ app.post('/login', skipAuth, async (req, res) => {
   }
 })
 
-app.get(`/users`, async (req, res) => {
-  let users = await prisma.users().$fragment(userListFragment)
-  res.json(users)
-})
-
-app.post('/user/create', async (req, res) => {
+const createUser = async (req, res) => {
   try {
     let data = req.body
     let hashedPassword = await bcrypt.hash(data.password, 10)
@@ -90,27 +65,54 @@ app.post('/user/create', async (req, res) => {
   } catch (error) {
     res.status(401).send(error)
   }
+}
+
+app.post('/signup', createUser)
+
+app.post('/api/user/create', createUser)
+
+app.get(`/api/users`, async (req, res) => {
+  let users = await prisma
+    .users()
+    .$fragment(`fragment user on User { id, email }`)
+  res.json(users)
 })
 
-app.get('/user/:userId', async (req, res) => {
+const userProfile = `
+fragment userProfile on User {
+  id
+  email
+  profile {
+    id
+    name
+    country
+    timezone
+    role
+    status
+  }
+}
+`
+
+app.get('/api/user/:userId', async (req, res) => {
   let currentUser = req.userId
   let userId = req.params.userId
 
   try {
     // TODO: Check if userId belongs to current users team
-    let user = await prisma.user({ id: userId })
+    let user = await prisma.user({ id: userId }).$fragment(userProfile)
     res.json(user)
   } catch (error) {
     res.status(401).send({ message: 'Could not find user' })
   }
 })
 
-// TODO
-app.post(`/user/:userId/update-profile`, async (req, res) => {
+app.post(`/api/user/:userId/update`, async (req, res) => {
   let userId = req.userId
   try {
+    let profile = await prisma.user({ id: userId }).profile()
+
     let updateUserProfile = await prisma.updateProfile({
-      where: { id: userId },
+      where: { id: profile.id },
       data: req.body,
     })
     res.json(updateUserProfile)
@@ -119,7 +121,24 @@ app.post(`/user/:userId/update-profile`, async (req, res) => {
   }
 })
 
-app.put('/user/:userId/make-admin', async (req, res) => {
+app.post(`/api/user/:userId/update-status`, async (req, res) => {
+  let currentUser = req.userId
+  let userId = req.params.userId
+  // TODO Check if user IDs are same
+  let { status } = req.body
+  try {
+    let profile = await prisma.user({ id: userId }).profile()
+    let updateUserProfile = await prisma.updateProfile({
+      where: { id: profile.id },
+      data: { status: status },
+    })
+    res.json(updateUserProfile)
+  } catch (err) {
+    res.status(401).send(err)
+  }
+})
+
+app.post('/api/user/:userId/make-admin', async (req, res) => {
   let currentUser = req.userId
   let userId = req.params.userId
 
@@ -129,13 +148,13 @@ app.put('/user/:userId/make-admin', async (req, res) => {
 
   let markAsAdmin = await prisma.upsertProfile({
     where: { id: userId },
-    data: { role: 'Admin' },
+    data: { role: 'ADMIN' },
   })
 
   res.json(markAsAdmin)
 })
 
-app.post('/team/create', async (req, res) => {
+app.post('/api/team/create', async (req, res) => {
   let currentUser = req.userId
   try {
     let data = req.body
@@ -150,7 +169,7 @@ app.post('/team/create', async (req, res) => {
   }
 })
 
-app.put('/team/:teamId/update', async (req, res) => {
+app.put('/api/team/:teamId/update', async (req, res) => {
   let userId = req.userId
   let teamId = req.params.teamId
 
@@ -170,7 +189,7 @@ app.put('/team/:teamId/update', async (req, res) => {
   }
 })
 
-app.get('/team/:teamId', async (req, res) => {
+app.get('/api/team/:teamId', async (req, res) => {
   let userId = req.userId
   let teamId = req.params.teamId
 
@@ -180,6 +199,41 @@ app.get('/team/:teamId', async (req, res) => {
     res.json(team)
   } catch (error) {
     res.status(401).send({ message: 'Could not find team' })
+  }
+})
+
+app.get('/api/team/:teamId/users', async (req, res) => {
+  let userId = req.userId
+  let teamId = req.params.teamId
+
+  try {
+    // TODO: Check if userId belongs to team
+    let users = await prisma
+      .team({ id: teamId })
+      .users()
+      .$fragment(userProfile)
+    res.json(users)
+  } catch (error) {
+    res.status(401).send({ message: 'Could not find team' })
+  }
+})
+
+app.post('/api/team/:teamId/join', async (req, res) => {
+  let userId = req.userId
+  let teamId = req.params.teamId
+
+  try {
+    // TODO: Check if userId belongs to team
+    let data = req.body
+    let users = data.users || [{ id: userId }]
+
+    let updateTeam = await prisma.updateTeam({
+      where: { id: teamId },
+      data: { users: { connect: users } },
+    })
+    res.json(updateTeam)
+  } catch (error) {
+    res.status(401).send(error)
   }
 })
 

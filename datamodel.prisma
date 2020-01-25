@@ -1,12 +1,12 @@
 enum Role {
-  Member
-  Admin
+  MEMBER
+  ADMIN
 }
 
 enum userStatus {
-  Available
-  Focus_mode
-  Unavailable
+  AVAILABLE
+  FOCUS
+  UNAVAILABLE
 }
 
 type User {
@@ -19,12 +19,12 @@ type User {
 
 type Profile {
   id: ID! @id
-  user: User
+  user: User!
   name: String
   country: String
   timezone: String
-  role: Role! @default(value: Member)
-  status: userStatus! @default(value: Available)
+  role: Role! @default(value: MEMBER)
+  status: userStatus! @default(value: AVAILABLE)
   workStartTime: Int
   workEndTime: Int
 }
