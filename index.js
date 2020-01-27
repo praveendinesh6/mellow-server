@@ -108,7 +108,6 @@ fragment userProfile on User {
   id
   email
   profile {
-    id
     name
     country
     timezone
@@ -118,6 +117,11 @@ fragment userProfile on User {
 }
 `
 
+const formatUser = userObj => {
+  let { profile, ...user } = userObj
+  return { ...user, ...profile }
+}
+
 app.get('/api/user/:userId', async (req, res) => {
   let currentUser = req.userId
   let userId = req.params.userId
@@ -125,7 +129,7 @@ app.get('/api/user/:userId', async (req, res) => {
   try {
     // TODO: Check if userId belongs to current users team
     let user = await prisma.user({ id: userId }).$fragment(userProfile)
-    res.json(user)
+    res.json(formatUser(user))
   } catch (error) {
     res.status(401).send({ message: 'Could not find user' })
   }
@@ -237,7 +241,8 @@ app.get('/api/team/:teamId/users', async (req, res) => {
       .team({ id: teamId })
       .users()
       .$fragment(userProfile)
-    res.json(users)
+
+    res.json(users.map(formatUser))
   } catch (error) {
     res.status(401).send({ message: 'Could not find team' })
   }
