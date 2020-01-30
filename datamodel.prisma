@@ -25,8 +25,24 @@ type Profile {
   timezone: String
   role: Role! @default(value: MEMBER)
   status: userStatus! @default(value: AVAILABLE)
-  workStartTime: Int
-  workEndTime: Int
+  workDays: WorkingDays @relation(link: INLINE)
+  workStartTime: DateTime
+  workEndTime: DateTime
+  vacation: Boolean @default(value: false)
+  vacationStart: DateTime
+  vacationEnd: DateTime
+}
+
+type WorkingDays {
+  id: ID! @id
+  user: Profile!
+  sun: Boolean @default(value: false)
+  mon: Boolean @default(value: true)
+  tue: Boolean @default(value: true)
+  wed: Boolean @default(value: true)
+  thu: Boolean @default(value: true)
+  fri: Boolean @default(value: true)
+  sat: Boolean @default(value: false)
 }
 
 type Team {
