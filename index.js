@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser')
 // Router/Middleware Utils
 const createUser = require('./utils/create-user')
 const authenticateUser = require('./utils/authenticate-user')
+const { formatUser, userFragment } = require('./utils/common')
 let userRouter = require('./routes/user')
 let teamRouter = require('./routes/team')
 let metaRouter = require('./routes/meta')
@@ -58,7 +59,16 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/signup', createUser)
+app.get('/api/account', async (req, res) => {
+  let userId = req.userId
 
+  try {
+    let user = await prisma.user({ id: userId }).$fragment(userFragment)
+    res.json({ user: formatUser(user) })
+  } catch (error) {
+    res.status(401).send({ message: 'Could not find user' })
+  }
+})
 app.use('/api/user', userRouter)
 app.use('/api/team', teamRouter)
 app.use('/api/meta', metaRouter)
