@@ -207,6 +207,7 @@
     "http-proxy-agent": "^2.1.0",
     "http-signature": "^1.2.0",
     "https-proxy-agent": "^2.2.4",
+    "i18n-iso-countries": "^4.3.1",
     "iconv-lite": "^0.4.24",
     "ieee754": "^1.1.13",
     "ignore": "^3.3.10",

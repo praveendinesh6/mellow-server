@@ -1,3 +1,6 @@
+const dotenv = require('dotenv')
+dotenv.config()
+// Dependencies
 const { prisma } = require('./generated/prisma-client')
 const express = require('express')
 const app = express()
@@ -6,21 +9,16 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
-const dotenv = require('dotenv')
-
-// Utils
+// Router/Middleware Utils
 const createUser = require('./utils/create-user')
-
-// Routers
+const authenticateUser = require('./utils/authenticate-user')
 let userRouter = require('./routes/user')
 let teamRouter = require('./routes/team')
 let metaRouter = require('./routes/meta')
 let errorHandler = require('./routes/error')
-
-dotenv.config()
-
-const secretword = 'pleaseDontHackMe3248'
-const expiresIn = '1d'
+// ENV VARIABLES
+const secretword = process.env.SECRET_WORD
+const expiresIn = process.env.TOKEN_EXPIRY
 
 app.use(bodyParser.json())
 app.use(
@@ -35,26 +33,7 @@ app.use(
 )
 app.use(cookieParser())
 
-app.use('/api', (req, res, next) => {
-  let authorization = req.cookies.mellowToken || ''
-  if (!authorization) authorization = req.headers.authorization
-
-  if (authorization) {
-    let token = authorization.replace('Token ', '')
-    jwt.verify(token, secretword, (err, decodedToken) => {
-      if (err || !decodedToken) {
-        res
-          .status(401)
-          .send({ message: 'Token expired. Login again to proceed' })
-        return
-      }
-      req.userId = decodedToken.userId
-      next()
-    })
-  } else {
-    res.status(401).send({ message: 'Invalid credentials' })
-  }
-})
+app.use('/api', authenticateUser)
 
 app.post('/login', async (req, res) => {
   try {
@@ -66,7 +45,7 @@ app.post('/login', async (req, res) => {
 
       res.cookie('mellowToken', `Token ${token}`, {
         expires: new Date(Date.now() + expiresIn),
-        secure: false, // set to true if your using https
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
       })
       res.json({ token })
@@ -74,7 +53,7 @@ app.post('/login', async (req, res) => {
       res.status(401).send({ message: 'Invalid password' })
     }
   } catch {
-    res.status(401).send({ message: 'Could not find user with the email ' })
+    res.status(401).send({ message: 'Could not find a user with this email' })
   }
 })
 
